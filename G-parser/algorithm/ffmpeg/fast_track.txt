@@ -18,16 +18,18 @@ onLock(tid t, lid l){
 }
 onUnlock(tid t, lid l){
    L[l] = C[t];
-   C[t][t]++;
+   C[t][t] = C[t][t] + 1;
 }
 
 onLoad(address addr, tid t){
 
 if(RE[addr] > 0){
     if(t==RE[addr]){
+        alda_assert(R[addr][t] != C[t][t] && R[addr][t] <= C[t][t] && W[addr] <= C[t][t], 1);
         if(R[addr][t] != C[t][t] && R[addr][t] <= C[t][t] && W[addr] <= C[t][t])
             R[addr][t] = C[t][t];
     }else{
+        alda_assert(W[addr] <= C[t][t], 1);
         if(W[addr] <= C[t][t]){
             R[addr][t] = C[t][t];
             R[addr][RE[addr]] = C[t][t];
@@ -35,21 +37,23 @@ if(RE[addr] > 0){
         }
     }
 }else if(RE[addr]==-1){
+    alda_assert(W[addr] <= C[t][t], 1);
     if(W[addr] <= C[t][t])
         R[addr][t] = C[t][t];
 }else {
     RE[addr] = t;
 }
-
 }
 
 
 
 onStore(address addr, tid t){
     if(RE[addr] == 0){
+        alda_assert(R[addr][t] <= C[t][t] && W[addr] != C[t][t] && W[addr] <= C[t][t], 1);
         if(R[addr][t] <= C[t][t] && W[addr] != C[t][t] && W[addr] <= C[t][t])
                     W[addr] = C[t][t];
     }else if(RE[addr]==-1){
+        alda_assert(W[addr] <= C[t][t] && R[addr] <= C[t], 1);
         if(W[addr] <= C[t][t] && R[addr] <= C[t]){
             W[addr] = C[t][t];
             R[addr][t] = 0;
@@ -63,12 +67,12 @@ onStore(address addr, tid t){
 
 onCreate(tid t, fork_id f){
 C[f] |= C[t];
-C[t][t]++;
+C[t][t] = C[t][t] + 1;
 }
 
 onDestroy(tid t, fork_id f){
 C[t] |= C[f];
-C[f][f]++;
+C[f][f] = C[f][f] + 1;
 }
 
 

@@ -343,7 +343,7 @@ public:
         }
         for(CallInst* call : to_be_inline){
             InlineFunctionInfo ifi;
-            InlineFunction(call, ifi);
+            //InlineFunction(call, ifi);
         }
         to_be_inline.clear();
         if(F.getName().equals("main")){
