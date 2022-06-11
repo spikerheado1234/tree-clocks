@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <climits>
+#include "tree_clock.h"
 
 namespace rt_lib {
     template<size_t T, size_t unit_len = 8, int len = T / unit_len + (T % unit_len == 0 ? 0 : 1)>
@@ -151,6 +152,16 @@ namespace rt_lib {
             for (int i = 0; i < T; i++) {
                 if (v[i] > another.v[i])
                     return false;
+            }
+            return true;
+        }
+
+        // spikerheado1234 added this comparator.
+        bool operator<=(rtLib::tree_clock<T>& another) {
+            for (int i = 0; i < T; i++) {
+                if (v[i] > rtLocal::clock_data::get_clock(another.clocks[i+1])) {
+                    return false;
+                }
             }
             return true;
         }
