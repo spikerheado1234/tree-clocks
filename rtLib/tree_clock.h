@@ -14,6 +14,7 @@ namespace rt_lib {
 #include "bit_vector.h"
 #include <stdlib.h>
 #include <stdint.h>
+#include <iostream>
 
 namespace rtLocal {
     template <class K, class V>
@@ -245,14 +246,13 @@ namespace rtLib {
 
                 long * clocks;
                 long * tree;
-                int root_id; // Stores the tid that is the current root "node" of the tree_clock.
-                int dimension;
+                int root_id = -1; // Stores the tid that is the current root "node" of the tree_clock.
+                int dimension = T;
                 stackType* s;
 
                 tree_clock() { // This is used to initialize lock tree_clocks.
-                    this->root_id = -1;
-                    clocks = (long*)malloc(sizeof(long)*T);
-                    tree = (long*)malloc(sizeof(long)*T);
+                    clocks = (long*)malloc(sizeof(long)*(T));
+                    tree = (long*)malloc(sizeof(long)*(T));
                     s = (stackType*)malloc(sizeof(stackType));
 
                     for (int i = 0; i < T + 1; i++) {
@@ -261,13 +261,12 @@ namespace rtLib {
                     }
                 }
 
+                // tid should be one based.
                 tree_clock(unsigned int tid, unsigned int dimension) { // This is used to initialize thread tree_clocks.
-                    dimension++; // No OOB errors since we are converting tid from 0-based to 1-based indexing.
                     this->dimension = dimension;
                     clocks = (long*)malloc(sizeof(long) * dimension);
                     tree = (long*)malloc(sizeof(long) * dimension);
                     s = (stackType*)malloc(sizeof(stackType));
-
 
                     for (int i = 0; i < dimension + 1; i++) {
                         this->clocks[i] = 0L;
@@ -275,9 +274,8 @@ namespace rtLib {
                     }
 
                     // Legality is defined as having a tree_node where the parent is non-zero then.
-                    // All of thtis is additional work that is to be done
+                    // All of this is additional work that is to be done
                     // for thread TCs.
-                    tid++; 
                     this->root_id = tid;
                     this->tree[tid] = rtLocal::tree_data::make_tnode(tid, 0, 0, 0);
                 }
@@ -348,8 +346,8 @@ namespace rtLib {
                     return rtLocal::clock_data::get_clock(this->clocks[thr]);
                 }
 
+                // Called from within alda, so need to increment thr by one.
                 void new_clock(int thr, int clock_value) {
-                    thr++;
                     this->clocks[thr] = rtLocal::clock_data::set_clock(this->clocks[thr], clock_value);
                 }
 
@@ -357,9 +355,9 @@ namespace rtLib {
                     this->deep_copy(other);
                     return *this;
                 }
-
-                unsigned int operator[](int val) { // For code re-use we must convert val from 0-based to 1-based indexing.
-                    val++; // TODO, check if required.
+                
+                // Called from within alda so need to increment val by one.
+                unsigned int operator[](int val) { 
                     return get(val);
                 }
 

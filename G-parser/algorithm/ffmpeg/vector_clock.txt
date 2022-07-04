@@ -1,0 +1,59 @@
+tid := threadid : 64
+fork_id := threadid : 64
+address := pointer : sync
+lid := lockid : 512
+lstatus := int16
+rstatus := int16
+wstatus := int16
+epoch := int16
+
+C = map(tid, map(tid, lstatus))
+L = map(lid, map(tid, lstatus))
+R = universe::map(address, map(tid, rstatus))
+W = universe::map(address, map(tid, wstatus))
+
+onLock(tid t, lid l){
+    C[t] |= L[l];
+}
+onUnlock(tid t, lid l){
+   L[l] = C[t];
+   C[t][t] = C[t][t] + 1;
+}
+
+onLoad(address addr, tid t){
+    alda_assert(W[addr] <= C[t], 1);
+    R[addr][t] = C[t][t];
+}
+
+
+onStore(address addr, tid t){
+    alda_assert(W[addr] <= C[t] && R[addr] <= C[t], 1);
+    W[addr][t] = C[t][t];
+}
+
+onCreate(tid t, fork_id f){
+C[f] |= C[t];
+C[t][t] = C[t][t] + 1;
+}
+
+onDestroy(tid t, fork_id f){
+C[t] |= C[f];
+C[f][f] = C[f][f] + 1;
+}
+
+
+insert after func pthread_create call onCreate($t, $1)
+
+insert after func pthread_join call onDestroy($t, $1)
+
+insert after func pthread_mutex_lock call onLock($t, $1)
+
+insert before func pthread_mutex_unlock call onUnlock($t, $1)
+
+insert after func pthread_rwlock_wrlock call onLock($t, $1)
+insert before func pthread_rwlock_unlock call onUnlock($t, $1)
+insert after func pthread_rwlock_rdlock call onLock($t, $1)
+
+insert after LoadInst call onLoad($1, $t)
+
+insert after StoreInst call onStore($2, $t)

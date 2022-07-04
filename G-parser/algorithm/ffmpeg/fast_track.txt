@@ -22,7 +22,6 @@ onUnlock(tid t, lid l){
 }
 
 onLoad(address addr, tid t){
-
 if(RE[addr] > 0){
     if(t==RE[addr]){
         alda_assert(R[addr][t] != C[t][t] && R[addr][t] <= C[t][t] && W[addr] <= C[t][t], 1);
@@ -49,7 +48,7 @@ if(RE[addr] > 0){
 
 onStore(address addr, tid t){
     if(RE[addr] == 0){
-        alda_assert(R[addr][t] <= C[t][t] && W[addr] != C[t][t] && W[addr] <= C[t][t], 1);
+        alda_assert(R[addr][t] <= C[t][t] && W[addr] != C[t][t] && W[addr]  <= C[t][t], 1);
         if(R[addr][t] <= C[t][t] && W[addr] != C[t][t] && W[addr] <= C[t][t])
                     W[addr] = C[t][t];
     }else if(RE[addr]==-1){
